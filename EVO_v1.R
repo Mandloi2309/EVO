@@ -11,6 +11,19 @@ initiate_parents <- function(dimension, population_size){
 eval_population <- function(){
   #TODO
   #EVAL FUNCTION ?
+  
+}
+
+the_other_eval_function <- function(genes,geneLength){
+  ### genes is a single instance with the function takes as an input for evaluating
+  ### geneLength is the siz eof the isntance
+  fitness = 0;
+  for (i in 0:geneLength) {
+    if (genes[i] == 1) {
+      ++fitness;
+    }
+  }
+  return(fitness)
 }
 
 tournament <- function(){

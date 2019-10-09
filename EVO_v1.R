@@ -5,6 +5,7 @@ initiate_parents <- function(dimension, population_size){
   #TODO
   population = matrix(data = NA, nrow = population_size, ncol = dimension)
   for(i in 0:(dim(population)[1])){population[i,] = sample(c(0, 1), dimension, TRUE)}
+  return(population)
 }
 
 eval_population <- function(){

@@ -4,21 +4,25 @@ initiate_parents <- function(dimension, population_size){
   # dimension == vector lenght / problem dimention
   #TODO
   population = matrix(data = NA, nrow = population_size, ncol = dimension)
-  for(i in 0:(dim(population)[1])){population[i,] = sample(c(0, 1), dimension, TRUE)}
+  for(i in 1:(dim(population)[1])){population[i,] = sample(c(0, 1), dimension, TRUE)}
   return(population)
 }
 
-eval_population <- function(){
-  #TODO
-  #EVAL FUNCTION ?
-  
+eval_population <- function(obj_func, population){
+  # This function takes an evaluation function and
+  # a population matrix and returns their fitness in a vector
+  fitness = c()
+  for(i in 1:(dim(population)[1])){
+    fitness = c(fitness, obj_func(population[i,]))
+  }
+  return(fitness)
 }
 
 the_other_eval_function <- function(genes,geneLength){
   ### genes is a single instance with the function takes as an input for evaluating
   ### geneLength is the siz eof the isntance
   fitness = 0;
-  for (i in 0:geneLength) {
+  for (i in 1:geneLength) {
     if (genes[i] == 1) {
       ++fitness;
     }
@@ -26,9 +30,27 @@ the_other_eval_function <- function(genes,geneLength){
   return(fitness)
 }
 
-tournament <- function(){
+tournament <- function(obj_func, population, count=50){
   # batch evalution or one-by-one?
-  eval_population()
+  # get fitness score for each instance:
+  fitness_vector = eval_population(obj_func, population)
+  # get instance size:
+  population_size = dim(population)[1]
+  # Get the number of participants
+  participants_count =  as.integer(population_size/10)
+  # initalize new population matrix
+  new_population = matrix(data = NA, nrow = count, ncol = dim(population)[2])
+  
+  # run tournaments:
+  for(i in 1:count){
+    # get sample:
+    selected_rows = sample(x = 1:population_size, participants_count)
+    # get best from sample:
+    winner = max(fitness_vector[selected_rows])
+    # insert best from sample into new_population
+    new_population[i,] = population[winner,]
+  }
+  return(new_population)
   #runs a tournament and returns a the winners as a matrix
 }
 
@@ -60,7 +82,6 @@ GA <- function(IOHproblem) {
   # find out target_hit function inner workings
   while (IOHproblem$target_hit()) {
     best_parents = tournament()
-    parents = combine()
     children = cross_over()
     children =  mutate(children)
     best_children = tournament()

@@ -54,9 +54,26 @@ tournament <- function(obj_func, population, count=50){
   #runs a tournament and returns a the winners as a matrix
 }
 
-cross_over <- function(){
-  #TODO
-  #cross-over
+actual_cross_over <- function(parent_a, parent_b){
+  child_matrix = matrix(NA, nrow = 2, ncol = length(parent_a))
+  first_cross_over = sample(1:as.integer(length(parent_a) / 2), 1)
+  child_matrix[1,] = c(parent_b[1:(first_cross_over - 1)],parent_a[first_cross_over:length(parent_a)])
+  child_matrix[2,] = c(parent_a[1:(first_cross_over - 1)],parent_b[first_cross_over:length(parent_a)])
+  return(child_matrix)
+}
+
+cross_over <- function(population){
+  population_size = dim(population)[1]
+  children = matrix(NA, nrow = population_size * 2, ncol = dim(population)[2])
+  j = 1
+  for(i in seq(1,population_size,2)){
+    parent_a = population[i,]
+    parent_b = population[i + 1,]
+    x =actual_cross_over(parent_a, parent_b)
+    children[j:(j+1),] = actual_cross_over(parent_a, parent_b)
+    children[(j+2):(j+3),] = actual_cross_over(parent_a, parent_b)
+    j = j + 4
+  }
 }
 
 mutate <- function(ind, mutation_rate){

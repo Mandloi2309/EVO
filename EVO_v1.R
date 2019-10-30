@@ -1,4 +1,4 @@
-#library(IOHexperimenter)
+library(IOHexperimenter)
 
 # get first parent population
 initiate_parents <- function(dimension, population_size){
@@ -119,74 +119,15 @@ GA <- function(IOHproblem) {
     children = cross_over(best_parents)
     parents = mutate_pop(children, mutation_rate = mutation_rate)
     best_parents = tournament(IOHproblem$obj_func, parents)
-    fopt = IOHproblem$obj_func(best_parents)
-    #print(fopt)
+    fopt = max(IOHproblem$obj_func(best_parents))
+    print(fopt)
   }
-  
   list(xopt = best_parents, fopt = fopt)
 }
-benchmark_algorithm(GA, functions = c(2), algorithm.name = "GA")
-# 
-# function (dimension, obj_func, target = NULL, lambda_ = 2, budget = NULL, 
-#           set_parameters = NULL) 
-# {
-#   if (is.null(budget)) 
-#     budget <- 100 * dimension
-#   parent <- sample(c(0, 1), dimension, TRUE)
-#   best <- parent
-#   r <- 2
-#   fopt <- obj_func(parent)
-#   budget <- budget - 1
-#   if (is.function(set_parameters)) 
-#     set_parameters(r)
-#   target_hit <- function() {
-#     if (is.null(target)) 
-#       return(FALSE)
-#     else return(target <= fopt)
-#   }
-#   while (budget > 0 && !target_hit()) {
-#     selected_r <- r
-#     selected_obj <- -Inf
-#     for (i in 1:lambda_) {
-#       offspring <- parent
-#       if (i <= lambda_/2) {
-#         mutation_rate = r/2/dimension
-#       }
-#       else {
-#         mutation_rate = 2 * r/dimension
-#       }
-#       offspring <- mutate(offspring, mutation_rate)
-#       v <- obj_func(offspring)
-#       if (v >= fopt) {
-#         fopt <- v
-#         best <- offspring
-#       }
-#       if (v >= selected_obj) {
-#         selected_obj = v
-#         selected_r = mutation_rate * dimension
-#       }
-#       budget <- budget - 1
-#       if (budget == 0) 
-#         break
-#     }
-#     parent <- best
-#     if (runif(1) > 0.5) {
-#       r = selected_r
-#     }
-#     else {
-#       if (runif(1) > 0.5) {
-#         r = r/2
-#       }
-#       else {
-#         r = 2 * r
-#       }
-#     }
-#     if (r < 2) 
-#       r = 2
-#     if (r > dimension/4) 
-#       r = dimension/4
-#     if (is.function(set_parameters)) 
-#       set_parameters(r)
-#   }
-#   list(xopt = best, fopt = fopt)
-# }
+benchmark_algorithm(GA, functions = c(1), dimensions = 16, algorithm.name = "GA", cdat = T, data.dir = "./data")
+
+# TODO
+# Remove one cross-over.
+# No poping in tournament
+# 100 tournament winners (we could lower the candidate size to reduce homology)
+# Add budget!

@@ -57,7 +57,6 @@ tournament <- function(obj_func, population, count=50){
       winner_index = selected_rows[fitness_vector[selected_rows] == winner_score][winnerid]
       winner = winner[winnerid,]
     }
-    population = population[-winner_index,]
     # insert best from sample into new_population
     new_population[i,] = winner
   }
@@ -73,17 +72,15 @@ actual_cross_over <- function(parent_a, parent_b){
   return(child_matrix)
 }
 
-cross_over <- function(population){
-  population_size = dim(population)[1]
-  children = matrix(NA, nrow = population_size * 2, ncol = dim(population)[2])
+cross_over <- function(population, population_size){
+  children = matrix(NA, nrow = population_size, ncol = dim(population)[2])
   j = 1
-  for(i in seq(1,population_size,2)){
-    parent_a = population[i,]
-    parent_b = population[i + 1,]
+  while(is.na(children[nrow(children)])){
+    parent_a = population[sample(nrow(population), 1),]
+    parent_b = population[sample(nrow(population), 1),]
     x =actual_cross_over(parent_a, parent_b)
     children[j:(j+1),] = actual_cross_over(parent_a, parent_b)
-    children[(j+2):(j+3),] = actual_cross_over(parent_a, parent_b)
-    j = j + 4
+    j = j + 2
   }
   return(children)
 }
@@ -108,6 +105,7 @@ mutate_pop <- function(population, mutation_rate){
 
 
 GA <- function(IOHproblem) {
+  print(IOHproblem$function_id)
   #establish mutation rate
   mutation_rate =  1 / IOHproblem$dimension
   # initiate initial parent population:
@@ -115,19 +113,18 @@ GA <- function(IOHproblem) {
   parents = initiate_parents(IOHproblem$dimension, 100)
   # find out target_hit function inner workings
   best_parents = tournament(IOHproblem$obj_func, parents)
-  while (!IOHproblem$target_hit()) {
-    children = cross_over(best_parents)
+  iterations = 0
+  budget = 50000
+  while((IOHproblem$target_hit() == 0) && (iterations < budget)){
+    iterations = iterations + 1
+    children = cross_over(best_parents, 100)
     parents = mutate_pop(children, mutation_rate = mutation_rate)
-    best_parents = tournament(IOHproblem$obj_func, parents)
-    fopt = max(IOHproblem$obj_func(best_parents))
-    print(fopt)
+    best_parents = tournament(IOHproblem$obj_func, parents, 15)
+    #IOHproblem$fopt = max(IOHproblem$obj_func(best_parents))
   }
-  list(xopt = best_parents, fopt = fopt)
+  return(list(xopt = best_parents, fopt = IOHproblem$fopt))
 }
-benchmark_algorithm(GA, functions = c(1), dimensions = 16, algorithm.name = "GA", cdat = T, data.dir = "./data")
+benchmark_algorithm(GA, functions = seq(3),repetitions = 2, instances = rep(1, 23), dimensions = rep(100, 23), algorithm.name = "TestRun", cdat = T, data.dir = "./data")
 
 # TODO
-# Remove one cross-over.
-# No poping in tournament
-# 100 tournament winners (we could lower the candidate size to reduce homology)
 # Add budget!

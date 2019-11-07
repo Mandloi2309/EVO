@@ -12,22 +12,7 @@ initiate_parents <- function(dimension, population_size){
 eval_population <- function(obj_func, population){
   # This function takes an evaluation function and
   # a population matrix and returns their fitness in a vector
-  fitness = c()
-  for(i in 1:(dim(population)[1])){
-    fitness = c(fitness, obj_func(population[i,]))
-  }
-  return(fitness)
-}
-
-the_other_eval_function <- function(genes,geneLength){
-  ### genes is a single instance with the function takes as an input for evaluating
-  ### geneLength is the siz eof the isntance
-  fitness = 0;
-  for (i in 1:geneLength) {
-    if (genes[i] == 1) {
-      ++fitness;
-    }
-  }
+  fitness = obj_func(population)
   return(fitness)
 }
 
@@ -66,9 +51,9 @@ tournament <- function(obj_func, population, count=50){
 
 actual_cross_over <- function(parent_a, parent_b){
   child_matrix = matrix(NA, nrow = 2, ncol = length(parent_a))
-  first_cross_over = sample(2:as.integer(length(parent_a) / 2), 1)
-  child_matrix[1,] = c(parent_b[1:(first_cross_over - 1)],parent_a[first_cross_over:length(parent_a)])
-  child_matrix[2,] = c(parent_a[1:(first_cross_over - 1)],parent_b[first_cross_over:length(parent_a)])
+  cross_over = sample(2:as.integer(length(parent_a) / 2), 1)
+  child_matrix[1,] = c(parent_b[1:(cross_over - 1)],parent_a[cross_over:length(parent_a)])
+  child_matrix[2,] = c(parent_a[1:(cross_over - 1)],parent_b[cross_over:length(parent_a)])
   return(child_matrix)
 }
 
@@ -91,7 +76,7 @@ mutate <- function(ind, mutation_rate){
   while (sum(mutations) == 0){
     mutations <- sample(c(0, 1), dim, prob = c(1-mutation_rate, mutation_rate), replace = TRUE)
   }
-  as.integer( xor(ind, mutations) )
+  return(as.integer( xor(ind, mutations) ))
 }
 
 mutate_pop <- function(population, mutation_rate){
@@ -104,27 +89,34 @@ mutate_pop <- function(population, mutation_rate){
 #}
 
 
-GA <- function(IOHproblem) {
-  print(IOHproblem$function_id)
+GA <- function(IOHproblem){
   #establish mutation rate
-  mutation_rate =  1 / IOHproblem$dimension
+  mutation_rate =  10 / IOHproblem$dimension #Mutation rate 1/100, 2/100, 10/100
   # initiate initial parent population:
-  # population_score = eval_population()
   parents = initiate_parents(IOHproblem$dimension, 100)
-  # find out target_hit function inner workings
   best_parents = tournament(IOHproblem$obj_func, parents)
   iterations = 0
+  if(iterations == 0){
+    cat(paste('\rFunction: ',IOHproblem$function_id))
+  }
   budget = 50000
   while((IOHproblem$target_hit() == 0) && (iterations < budget)){
-    iterations = iterations + 1
+    iterations = iterations + 100
     children = cross_over(best_parents, 100)
     parents = mutate_pop(children, mutation_rate = mutation_rate)
-    best_parents = tournament(IOHproblem$obj_func, parents, 15)
-    #IOHproblem$fopt = max(IOHproblem$obj_func(best_parents))
+    best_parents = tournament(IOHproblem$obj_func, parents, 25) # Selection 15, 25
   }
   return(list(xopt = best_parents, fopt = IOHproblem$fopt))
 }
-benchmark_algorithm(GA, functions = seq(3),repetitions = 2, instances = rep(1, 23), dimensions = rep(100, 23), algorithm.name = "TestRun", cdat = T, data.dir = "./data")
+
+benchmark_algorithm(GA, functions = seq(23),repetitions = 20, instances = 1, dimensions = 100,
+                    algorithm.name = "karolis_tushar_GA_config_5_MR_10", data.dir = "./karolis_tushar_GA_config_5_MR_10")
+
+### Config 1: Selection 25 MR: 1/100 
+### Config 2: Selection 15 MR: 1/100 
+### Config 3: Selection 25 MR: 2/100
+### Config 4: Selection 15 MR: 2/100
+### Config 5: Selection 25 MR: 10/100
+
 
 # TODO
-# Add budget!

@@ -51,9 +51,26 @@ tournament <- function(obj_func, population, count=50){
 
 actual_cross_over <- function(parent_a, parent_b){
   child_matrix = matrix(NA, nrow = 2, ncol = length(parent_a))
-  cross_over = sample(2:as.integer(length(parent_a) / 2), 1)
-  child_matrix[1,] = c(parent_b[1:(cross_over - 1)],parent_a[cross_over:length(parent_a)])
-  child_matrix[2,] = c(parent_a[1:(cross_over - 1)],parent_b[cross_over:length(parent_a)])
+  cross_over_type = c(1,2,3)
+  COP = sample(c(1,2,3),1,prob = seq(0.3,3)) #1: One point, 2: Two point, 3: uniform crossover
+  switch (COP,
+    1 = { #One point-crossover
+      cross_over = sample(2:as.integer(length(parent_a) / 2), 1)
+      child_matrix[1,] = c(parent_b[1:(cross_over - 1)],parent_a[cross_over:length(parent_a)])
+      child_matrix[2,] = c(parent_a[1:(cross_over - 1)],parent_b[cross_over:length(parent_a)])
+    }
+    2 = { #Two-point crossover
+      cross_over = sample(2:as.integer(length(parent_a) / 2), 1)
+      cross_over_2 = sample((cross_over+1):as.integer(length(parent_a)), 1)
+      child_matrix[1,] = c(parent_b[1:(cross_over - 1)],parent_a[cross_over:(cross_over_2-1)],parent_b[cross_over_2:length(parent_a)])
+      child_matrix[2,] = c(parent_a[1:(cross_over - 1)],parent_b[cross_over:(cross_over_2-1)],parent_a[cross_over_2:length(parent_a)])
+    }
+    3 = { #Uniform crossover
+      cross_over = sample(1:length(parent_a),(length(parent_a)/2))
+      child_matrix[1,] = c(parent_b[cross_over],parent_a[-cross_over])
+      child_matrix[2,] = c(parent_a[cross_over],parent_b[-cross_over])
+    }
+  )
   return(child_matrix)
 }
 

@@ -1,9 +1,6 @@
 library(IOHexperimenter)
-
-# get first parent population
 initiate_parents <- function(dimension, population_size){
-  # dimension == vector lenght / problem dimention
-  #TODO
+  # get first parent population
   population = matrix(data = NA, nrow = population_size, ncol = dimension)
   for(i in 1:(dim(population)[1])){population[i,] = sample(c(0, 1), dimension, TRUE)}
   return(population)
@@ -17,7 +14,6 @@ eval_population <- function(obj_func, population){
 }
 
 tournament <- function(obj_func, population, count=50){
-  # batch evalution or one-by-one?
   # get fitness score for each instance:
   fitness_vector = eval_population(obj_func, population)
   # get instance size:
@@ -26,7 +22,6 @@ tournament <- function(obj_func, population, count=50){
   participants_count =  as.integer(population_size/10)
   # initalize new population matrix
   new_population = matrix(data = NA, nrow = count, ncol = dim(population)[2])
-  
   # run tournaments:
   for(i in 1:count){
     # get sample:
@@ -37,6 +32,7 @@ tournament <- function(obj_func, population, count=50){
     winner_score = max(fitness_vector[selected_rows])
     winner = selected_pops[fitness_vector[selected_rows] == winner_score,]
     winner_index = selected_rows[fitness_vector[selected_rows] == winner_score]
+    # if more than one winner select one randomly
     if (!is.null(dim(winner))){
       winnerid = sample(seq(1,dim(winner)[1]), size = 1)
       winner_index = selected_rows[fitness_vector[selected_rows] == winner_score][winnerid]
@@ -46,37 +42,28 @@ tournament <- function(obj_func, population, count=50){
     new_population[i,] = winner
   }
   return(new_population)
-  #runs a tournament and returns a the winners as a matrix
+  # runs a tournament and returns a the winners as a matrix
 }
 
 actual_cross_over <- function(parent_a, parent_b){
+  # This function takes two parents as inout and performs crossover 
+  # results two children
   child_matrix = matrix(NA, nrow = 2, ncol = length(parent_a))
-  cross_over_type = c(1,2,3)
-  COP = sample(c(1,2,3),1,prob = seq(0.3,3)) #1: One point, 2: Two point, 3: uniform crossover
-  switch (COP,
-    1 = { #One point-crossover
-      cross_over = sample(2:as.integer(length(parent_a) / 2), 1)
-      child_matrix[1,] = c(parent_b[1:(cross_over - 1)],parent_a[cross_over:length(parent_a)])
-      child_matrix[2,] = c(parent_a[1:(cross_over - 1)],parent_b[cross_over:length(parent_a)])
-    }
-    2 = { #Two-point crossover
-      cross_over = sample(2:as.integer(length(parent_a) / 2), 1)
-      cross_over_2 = sample((cross_over+1):as.integer(length(parent_a)), 1)
-      child_matrix[1,] = c(parent_b[1:(cross_over - 1)],parent_a[cross_over:(cross_over_2-1)],parent_b[cross_over_2:length(parent_a)])
-      child_matrix[2,] = c(parent_a[1:(cross_over - 1)],parent_b[cross_over:(cross_over_2-1)],parent_a[cross_over_2:length(parent_a)])
-    }
-    3 = { #Uniform crossover
-      cross_over = sample(1:length(parent_a),(length(parent_a)/2))
-      child_matrix[1,] = c(parent_b[cross_over],parent_a[-cross_over])
-      child_matrix[2,] = c(parent_a[cross_over],parent_b[-cross_over])
-    }
-  )
+  # select a random position to perform point crossover
+  cross_over = sample(2:as.integer(length(parent_a) / 2), 1)
+  # Child 1: Parent B till the crossover point and parent A from the cross over point to end
+  child_matrix[1,] = c(parent_b[1:(cross_over - 1)],parent_a[cross_over:length(parent_a)])
+  # Child 2: Parent A till the crossover point and parent B from the cross over point to end
+  child_matrix[2,] = c(parent_a[1:(cross_over - 1)],parent_b[cross_over:length(parent_a)])
   return(child_matrix)
 }
 
 cross_over <- function(population, population_size){
+  # This funcrion takes population as inout and performs crossover until
+  # number of children equals the population size
   children = matrix(NA, nrow = population_size, ncol = dim(population)[2])
   j = 1
+  #Selects two parents from the population randomly
   while(is.na(children[nrow(children)])){
     parent_a = population[sample(nrow(population), 1),]
     parent_b = population[sample(nrow(population), 1),]
@@ -88,6 +75,9 @@ cross_over <- function(population, population_size){
 }
 
 mutate <- function(ind, mutation_rate){
+  # Inout parameters ind: Individual from the population which will get mutated
+  # with the probabilty given as mutation_rate
+  # mutation_rate: is the probaility of a bit to be 1
   dim <- length(ind)
   mutations <- seq(0, 0, length.out = dim)
   while (sum(mutations) == 0){
@@ -97,20 +87,18 @@ mutate <- function(ind, mutation_rate){
 }
 
 mutate_pop <- function(population, mutation_rate){
+  # Mutates each individual using mutate function
   mutated_population = apply(population, 2, function(x) mutate(x, mutation_rate = mutation_rate))
   return(mutated_population)
 }
 
-#terminate <- function(target_hit, ){
-#  # uses target_hit to evaluate if done
-#}
-
-
 GA <- function(IOHproblem){
-  #establish mutation rate
-  mutation_rate =  10 / IOHproblem$dimension #Mutation rate 1/100, 2/100, 10/100
-  # initiate initial parent population:
+  # Establish mutation rate
+  # Mutation rate 1/100, 2/100, 10/100
+  mutation_rate =  1 / IOHproblem$dimension 
+  # Initiate initial parent population:
   parents = initiate_parents(IOHproblem$dimension, 100)
+  # First selection of best parents
   best_parents = tournament(IOHproblem$obj_func, parents)
   iterations = 0
   if(iterations == 0){
@@ -121,19 +109,19 @@ GA <- function(IOHproblem){
     iterations = iterations + 100
     children = cross_over(best_parents, 100)
     parents = mutate_pop(children, mutation_rate = mutation_rate)
-    best_parents = tournament(IOHproblem$obj_func, parents, 25) # Selection 15, 25
+    best_parents = tournament(IOHproblem$obj_func, parents, 15) # Selection 15, 25
   }
   return(list(xopt = best_parents, fopt = IOHproblem$fopt))
 }
 
 benchmark_algorithm(GA, functions = seq(23),repetitions = 20, instances = 1, dimensions = 100,
-                    algorithm.name = "karolis_tushar_GA_config_5_MR_10", data.dir = "./karolis_tushar_GA_config_5_MR_10")
-
-### Config 1: Selection 25 MR: 1/100 
-### Config 2: Selection 15 MR: 1/100 
-### Config 3: Selection 25 MR: 2/100
-### Config 4: Selection 15 MR: 2/100
-### Config 5: Selection 25 MR: 10/100
+                    algorithm.name = "karolis_tushar_GA_config_2_MR_1", data.dir = "./karolis_tushar_GA_config_2_MR_1")
 
 
-# TODO
+#################################################
+### Configurations tried:
+## Config 1: Selection 25 MR: 1/100 
+## Config 2: Selection 15 MR: 1/100 
+## Config 3: Selection 25 MR: 2/100
+## Config 4: Selection 15 MR: 2/100
+## Config 5: Selection 25 MR: 10/100
